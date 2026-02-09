@@ -5,13 +5,12 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 
 public class PagedResponse<T> {
-    private List<T> content;
-    private int page;
-    private int size;
-    private long totalElements;
-    private int totalPages;
+    private final List<T> content;
+    private final int page;
+    private final int size;
+    private final long totalElements;
+    private final int totalPages;
 
-    // Costruttori, getter e setter
     public PagedResponse(Page<T> page) {
         this.content = page.getContent();
         this.page = page.getNumber();
@@ -20,7 +19,6 @@ public class PagedResponse<T> {
         this.totalPages = page.getTotalPages();
     }
 
-    // Getter e setter
     public List<T> getContent() {
         return content;
     }
@@ -40,5 +38,4 @@ public class PagedResponse<T> {
     public int getTotalPages() {
         return totalPages;
     }
-
 }

@@ -1,0 +1,404 @@
+package it.borgosesiaspa.controller;
+
+import org.springframework.data.domain.PageRequest;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import it.borgosesiaspa.dto.PagedResponse;
+import it.borgosesiaspa.dto.edit.CanoneEditDto;
+import it.borgosesiaspa.dto.edit.ContrattoLocazioneEditDto;
+import it.borgosesiaspa.dto.edit.EventoContrattoEditDto;
+import it.borgosesiaspa.dto.edit.IncassoEditDto;
+import it.borgosesiaspa.dto.edit.MorositaEditDto;
+import it.borgosesiaspa.dto.edit.PianoCanoneEditDto;
+import it.borgosesiaspa.service.EntityEditingService;
+
+@RestController
+@RequestMapping("/api/editing")
+public class EntityEditingController {
+
+    private final EntityEditingService entityEditingService;
+
+    public EntityEditingController(EntityEditingService entityEditingService) {
+        this.entityEditingService = entityEditingService;
+    }
+
+    @GetMapping("/contratti")
+    @Operation(summary = "Elenca contratti", description = "Restituisce l'elenco dei contratti di locazione.", security = @SecurityRequirement(name = "BearerAuth"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Elenco contratti recuperato correttamente"),
+            @ApiResponse(responseCode = "401", description = "Non autorizzato")
+    })
+    public ResponseEntity<PagedResponse<ContrattoLocazioneEditDto>> listContrattiLocazione(
+            @RequestParam(required = false, defaultValue = "0") int page,
+            @RequestParam(required = false, defaultValue = "50") int size) {
+        return ResponseEntity.ok(new PagedResponse<>(
+                entityEditingService.listContrattiLocazione(PageRequest.of(page, size))));
+    }
+
+    @PostMapping("/contratti")
+    @Operation(summary = "Crea contratto", description = "Crea un nuovo contratto di locazione.", security = @SecurityRequirement(name = "BearerAuth"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Contratto creato correttamente"),
+            @ApiResponse(responseCode = "400", description = "Richiesta non valida"),
+            @ApiResponse(responseCode = "401", description = "Non autorizzato")
+    })
+    public ResponseEntity<ContrattoLocazioneEditDto> createContrattoLocazione(
+            @RequestBody ContrattoLocazioneEditDto dto) {
+        return ResponseEntity.ok(entityEditingService.createContrattoLocazione(dto));
+    }
+
+    @GetMapping("/contratti/{id}")
+    @Operation(summary = "Dettaglio contratto", description = "Restituisce un singolo contratto di locazione per id.", security = @SecurityRequirement(name = "BearerAuth"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Contratto recuperato correttamente"),
+            @ApiResponse(responseCode = "404", description = "Contratto non trovato"),
+            @ApiResponse(responseCode = "401", description = "Non autorizzato")
+    })
+    public ResponseEntity<ContrattoLocazioneEditDto> getContrattoLocazione(@PathVariable Long id) {
+        return ResponseEntity.ok(entityEditingService.getContrattoLocazione(id));
+    }
+
+    @PutMapping("/contratti/{id}")
+    @Operation(summary = "Aggiorna contratto", description = "Aggiorna un contratto di locazione esistente.", security = @SecurityRequirement(name = "BearerAuth"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Contratto aggiornato correttamente"),
+            @ApiResponse(responseCode = "400", description = "Richiesta non valida"),
+            @ApiResponse(responseCode = "404", description = "Contratto non trovato"),
+            @ApiResponse(responseCode = "401", description = "Non autorizzato")
+    })
+    public ResponseEntity<ContrattoLocazioneEditDto> updateContrattoLocazione(
+            @PathVariable Long id,
+            @RequestBody ContrattoLocazioneEditDto dto) {
+        return ResponseEntity.ok(entityEditingService.updateContrattoLocazione(id, dto));
+    }
+
+    @DeleteMapping("/contratti/{id}")
+    @Operation(summary = "Cancella contratto", description = "Cancella un contratto di locazione esistente.", security = @SecurityRequirement(name = "BearerAuth"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Contratto cancellato correttamente"),
+            @ApiResponse(responseCode = "404", description = "Contratto non trovato"),
+            @ApiResponse(responseCode = "401", description = "Non autorizzato")
+    })
+    public ResponseEntity<Void> deleteContrattoLocazione(@PathVariable Long id) {
+        entityEditingService.deleteContrattoLocazione(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/canoni")
+    @Operation(summary = "Elenca canoni", description = "Restituisce l'elenco dei canoni.", security = @SecurityRequirement(name = "BearerAuth"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Elenco canoni recuperato correttamente"),
+            @ApiResponse(responseCode = "401", description = "Non autorizzato")
+    })
+    public ResponseEntity<PagedResponse<CanoneEditDto>> listCanoni(
+            @RequestParam(required = false, defaultValue = "0") int page,
+            @RequestParam(required = false, defaultValue = "50") int size) {
+        return ResponseEntity.ok(new PagedResponse<>(
+                entityEditingService.listCanoni(PageRequest.of(page, size))));
+    }
+
+    @PostMapping("/canoni")
+    @Operation(summary = "Crea canone", description = "Crea un nuovo canone.", security = @SecurityRequirement(name = "BearerAuth"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Canone creato correttamente"),
+            @ApiResponse(responseCode = "400", description = "Richiesta non valida"),
+            @ApiResponse(responseCode = "401", description = "Non autorizzato")
+    })
+    public ResponseEntity<CanoneEditDto> createCanone(@RequestBody CanoneEditDto dto) {
+        return ResponseEntity.ok(entityEditingService.createCanone(dto));
+    }
+
+    @GetMapping("/canoni/{id}")
+    @Operation(summary = "Dettaglio canone", description = "Restituisce un singolo canone per id.", security = @SecurityRequirement(name = "BearerAuth"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Canone recuperato correttamente"),
+            @ApiResponse(responseCode = "404", description = "Canone non trovato"),
+            @ApiResponse(responseCode = "401", description = "Non autorizzato")
+    })
+    public ResponseEntity<CanoneEditDto> getCanone(@PathVariable Long id) {
+        return ResponseEntity.ok(entityEditingService.getCanone(id));
+    }
+
+    @PutMapping("/canoni/{id}")
+    @Operation(summary = "Aggiorna canone", description = "Aggiorna un canone esistente.", security = @SecurityRequirement(name = "BearerAuth"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Canone aggiornato correttamente"),
+            @ApiResponse(responseCode = "400", description = "Richiesta non valida"),
+            @ApiResponse(responseCode = "404", description = "Canone non trovato"),
+            @ApiResponse(responseCode = "401", description = "Non autorizzato")
+    })
+    public ResponseEntity<CanoneEditDto> updateCanone(
+            @PathVariable Long id,
+            @RequestBody CanoneEditDto dto) {
+        return ResponseEntity.ok(entityEditingService.updateCanone(id, dto));
+    }
+
+    @DeleteMapping("/canoni/{id}")
+    @Operation(summary = "Cancella canone", description = "Cancella un canone esistente.", security = @SecurityRequirement(name = "BearerAuth"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Canone cancellato correttamente"),
+            @ApiResponse(responseCode = "404", description = "Canone non trovato"),
+            @ApiResponse(responseCode = "401", description = "Non autorizzato")
+    })
+    public ResponseEntity<Void> deleteCanone(@PathVariable Long id) {
+        entityEditingService.deleteCanone(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/incassi")
+    @Operation(summary = "Elenca incassi", description = "Restituisce l'elenco degli incassi.", security = @SecurityRequirement(name = "BearerAuth"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Elenco incassi recuperato correttamente"),
+            @ApiResponse(responseCode = "401", description = "Non autorizzato")
+    })
+    public ResponseEntity<PagedResponse<IncassoEditDto>> listIncassi(
+            @RequestParam(required = false, defaultValue = "0") int page,
+            @RequestParam(required = false, defaultValue = "50") int size) {
+        return ResponseEntity.ok(new PagedResponse<>(
+                entityEditingService.listIncassi(PageRequest.of(page, size))));
+    }
+
+    @PostMapping("/incassi")
+    @Operation(summary = "Crea incasso", description = "Crea un nuovo incasso.", security = @SecurityRequirement(name = "BearerAuth"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Incasso creato correttamente"),
+            @ApiResponse(responseCode = "400", description = "Richiesta non valida"),
+            @ApiResponse(responseCode = "401", description = "Non autorizzato")
+    })
+    public ResponseEntity<IncassoEditDto> createIncasso(@RequestBody IncassoEditDto dto) {
+        return ResponseEntity.ok(entityEditingService.createIncasso(dto));
+    }
+
+    @GetMapping("/incassi/{id}")
+    @Operation(summary = "Dettaglio incasso", description = "Restituisce un singolo incasso per id.", security = @SecurityRequirement(name = "BearerAuth"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Incasso recuperato correttamente"),
+            @ApiResponse(responseCode = "404", description = "Incasso non trovato"),
+            @ApiResponse(responseCode = "401", description = "Non autorizzato")
+    })
+    public ResponseEntity<IncassoEditDto> getIncasso(@PathVariable Long id) {
+        return ResponseEntity.ok(entityEditingService.getIncasso(id));
+    }
+
+    @PutMapping("/incassi/{id}")
+    @Operation(summary = "Aggiorna incasso", description = "Aggiorna un incasso esistente.", security = @SecurityRequirement(name = "BearerAuth"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Incasso aggiornato correttamente"),
+            @ApiResponse(responseCode = "400", description = "Richiesta non valida"),
+            @ApiResponse(responseCode = "404", description = "Incasso non trovato"),
+            @ApiResponse(responseCode = "401", description = "Non autorizzato")
+    })
+    public ResponseEntity<IncassoEditDto> updateIncasso(
+            @PathVariable Long id,
+            @RequestBody IncassoEditDto dto) {
+        return ResponseEntity.ok(entityEditingService.updateIncasso(id, dto));
+    }
+
+    @DeleteMapping("/incassi/{id}")
+    @Operation(summary = "Cancella incasso", description = "Cancella un incasso esistente.", security = @SecurityRequirement(name = "BearerAuth"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Incasso cancellato correttamente"),
+            @ApiResponse(responseCode = "404", description = "Incasso non trovato"),
+            @ApiResponse(responseCode = "401", description = "Non autorizzato")
+    })
+    public ResponseEntity<Void> deleteIncasso(@PathVariable Long id) {
+        entityEditingService.deleteIncasso(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/morosita")
+    @Operation(summary = "Elenca morosita", description = "Restituisce l'elenco delle morosita.", security = @SecurityRequirement(name = "BearerAuth"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Elenco morosita recuperato correttamente"),
+            @ApiResponse(responseCode = "401", description = "Non autorizzato")
+    })
+    public ResponseEntity<PagedResponse<MorositaEditDto>> listMorosita(
+            @RequestParam(required = false, defaultValue = "0") int page,
+            @RequestParam(required = false, defaultValue = "50") int size) {
+        return ResponseEntity.ok(new PagedResponse<>(
+                entityEditingService.listMorosita(PageRequest.of(page, size))));
+    }
+
+    @PostMapping("/morosita")
+    @Operation(summary = "Crea morosita", description = "Crea una nuova morosita.", security = @SecurityRequirement(name = "BearerAuth"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Morosita creata correttamente"),
+            @ApiResponse(responseCode = "400", description = "Richiesta non valida"),
+            @ApiResponse(responseCode = "401", description = "Non autorizzato")
+    })
+    public ResponseEntity<MorositaEditDto> createMorosita(@RequestBody MorositaEditDto dto) {
+        return ResponseEntity.ok(entityEditingService.createMorosita(dto));
+    }
+
+    @GetMapping("/morosita/{id}")
+    @Operation(summary = "Dettaglio morosita", description = "Restituisce una singola morosita per id.", security = @SecurityRequirement(name = "BearerAuth"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Morosita recuperata correttamente"),
+            @ApiResponse(responseCode = "404", description = "Morosita non trovata"),
+            @ApiResponse(responseCode = "401", description = "Non autorizzato")
+    })
+    public ResponseEntity<MorositaEditDto> getMorosita(@PathVariable Long id) {
+        return ResponseEntity.ok(entityEditingService.getMorosita(id));
+    }
+
+    @PutMapping("/morosita/{id}")
+    @Operation(summary = "Aggiorna morosita", description = "Aggiorna una morosita esistente.", security = @SecurityRequirement(name = "BearerAuth"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Morosita aggiornata correttamente"),
+            @ApiResponse(responseCode = "400", description = "Richiesta non valida"),
+            @ApiResponse(responseCode = "404", description = "Morosita non trovata"),
+            @ApiResponse(responseCode = "401", description = "Non autorizzato")
+    })
+    public ResponseEntity<MorositaEditDto> updateMorosita(
+            @PathVariable Long id,
+            @RequestBody MorositaEditDto dto) {
+        return ResponseEntity.ok(entityEditingService.updateMorosita(id, dto));
+    }
+
+    @DeleteMapping("/morosita/{id}")
+    @Operation(summary = "Cancella morosita", description = "Cancella una morosita esistente.", security = @SecurityRequirement(name = "BearerAuth"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Morosita cancellata correttamente"),
+            @ApiResponse(responseCode = "404", description = "Morosita non trovata"),
+            @ApiResponse(responseCode = "401", description = "Non autorizzato")
+    })
+    public ResponseEntity<Void> deleteMorosita(@PathVariable Long id) {
+        entityEditingService.deleteMorosita(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/piani-canone")
+    @Operation(summary = "Elenca piani canone", description = "Restituisce l'elenco dei piani canone.", security = @SecurityRequirement(name = "BearerAuth"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Elenco piani canone recuperato correttamente"),
+            @ApiResponse(responseCode = "401", description = "Non autorizzato")
+    })
+    public ResponseEntity<PagedResponse<PianoCanoneEditDto>> listPianiCanone(
+            @RequestParam(required = false, defaultValue = "0") int page,
+            @RequestParam(required = false, defaultValue = "50") int size) {
+        return ResponseEntity.ok(new PagedResponse<>(
+                entityEditingService.listPianiCanone(PageRequest.of(page, size))));
+    }
+
+    @PostMapping("/piani-canone")
+    @Operation(summary = "Crea piano canone", description = "Crea un nuovo piano canone.", security = @SecurityRequirement(name = "BearerAuth"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Piano canone creato correttamente"),
+            @ApiResponse(responseCode = "400", description = "Richiesta non valida"),
+            @ApiResponse(responseCode = "401", description = "Non autorizzato")
+    })
+    public ResponseEntity<PianoCanoneEditDto> createPianoCanone(@RequestBody PianoCanoneEditDto dto) {
+        return ResponseEntity.ok(entityEditingService.createPianoCanone(dto));
+    }
+
+    @GetMapping("/piani-canone/{id}")
+    @Operation(summary = "Dettaglio piano canone", description = "Restituisce un singolo piano canone per id.", security = @SecurityRequirement(name = "BearerAuth"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Piano canone recuperato correttamente"),
+            @ApiResponse(responseCode = "404", description = "Piano canone non trovato"),
+            @ApiResponse(responseCode = "401", description = "Non autorizzato")
+    })
+    public ResponseEntity<PianoCanoneEditDto> getPianoCanone(@PathVariable Long id) {
+        return ResponseEntity.ok(entityEditingService.getPianoCanone(id));
+    }
+
+    @PutMapping("/piani-canone/{id}")
+    @Operation(summary = "Aggiorna piano canone", description = "Aggiorna un piano canone esistente.", security = @SecurityRequirement(name = "BearerAuth"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Piano canone aggiornato correttamente"),
+            @ApiResponse(responseCode = "400", description = "Richiesta non valida"),
+            @ApiResponse(responseCode = "404", description = "Piano canone non trovato"),
+            @ApiResponse(responseCode = "401", description = "Non autorizzato")
+    })
+    public ResponseEntity<PianoCanoneEditDto> updatePianoCanone(
+            @PathVariable Long id,
+            @RequestBody PianoCanoneEditDto dto) {
+        return ResponseEntity.ok(entityEditingService.updatePianoCanone(id, dto));
+    }
+
+    @DeleteMapping("/piani-canone/{id}")
+    @Operation(summary = "Cancella piano canone", description = "Cancella un piano canone esistente.", security = @SecurityRequirement(name = "BearerAuth"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Piano canone cancellato correttamente"),
+            @ApiResponse(responseCode = "404", description = "Piano canone non trovato"),
+            @ApiResponse(responseCode = "401", description = "Non autorizzato")
+    })
+    public ResponseEntity<Void> deletePianoCanone(@PathVariable Long id) {
+        entityEditingService.deletePianoCanone(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/eventi-contratto")
+    @Operation(summary = "Elenca eventi contratto", description = "Restituisce l'elenco degli eventi contratto.", security = @SecurityRequirement(name = "BearerAuth"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Elenco eventi contratto recuperato correttamente"),
+            @ApiResponse(responseCode = "401", description = "Non autorizzato")
+    })
+    public ResponseEntity<PagedResponse<EventoContrattoEditDto>> listEventiContratto(
+            @RequestParam(required = false, defaultValue = "0") int page,
+            @RequestParam(required = false, defaultValue = "50") int size) {
+        return ResponseEntity.ok(new PagedResponse<>(
+                entityEditingService.listEventiContratto(PageRequest.of(page, size))));
+    }
+
+    @PostMapping("/eventi-contratto")
+    @Operation(summary = "Crea evento contratto", description = "Crea un nuovo evento contratto.", security = @SecurityRequirement(name = "BearerAuth"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Evento contratto creato correttamente"),
+            @ApiResponse(responseCode = "400", description = "Richiesta non valida"),
+            @ApiResponse(responseCode = "401", description = "Non autorizzato")
+    })
+    public ResponseEntity<EventoContrattoEditDto> createEventoContratto(@RequestBody EventoContrattoEditDto dto) {
+        return ResponseEntity.ok(entityEditingService.createEventoContratto(dto));
+    }
+
+    @GetMapping("/eventi-contratto/{id}")
+    @Operation(summary = "Dettaglio evento contratto", description = "Restituisce un singolo evento contratto per id.", security = @SecurityRequirement(name = "BearerAuth"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Evento contratto recuperato correttamente"),
+            @ApiResponse(responseCode = "404", description = "Evento contratto non trovato"),
+            @ApiResponse(responseCode = "401", description = "Non autorizzato")
+    })
+    public ResponseEntity<EventoContrattoEditDto> getEventoContratto(@PathVariable Long id) {
+        return ResponseEntity.ok(entityEditingService.getEventoContratto(id));
+    }
+
+    @PutMapping("/eventi-contratto/{id}")
+    @Operation(summary = "Aggiorna evento contratto", description = "Aggiorna un evento contratto esistente.", security = @SecurityRequirement(name = "BearerAuth"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Evento contratto aggiornato correttamente"),
+            @ApiResponse(responseCode = "400", description = "Richiesta non valida"),
+            @ApiResponse(responseCode = "404", description = "Evento contratto non trovato"),
+            @ApiResponse(responseCode = "401", description = "Non autorizzato")
+    })
+    public ResponseEntity<EventoContrattoEditDto> updateEventoContratto(
+            @PathVariable Long id,
+            @RequestBody EventoContrattoEditDto dto) {
+        return ResponseEntity.ok(entityEditingService.updateEventoContratto(id, dto));
+    }
+
+    @DeleteMapping("/eventi-contratto/{id}")
+    @Operation(summary = "Cancella evento contratto", description = "Cancella un evento contratto esistente.", security = @SecurityRequirement(name = "BearerAuth"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Evento contratto cancellato correttamente"),
+            @ApiResponse(responseCode = "404", description = "Evento contratto non trovato"),
+            @ApiResponse(responseCode = "401", description = "Non autorizzato")
+    })
+    public ResponseEntity<Void> deleteEventoContratto(@PathVariable Long id) {
+        entityEditingService.deleteEventoContratto(id);
+        return ResponseEntity.noContent().build();
+    }
+}
