@@ -44,6 +44,7 @@ public class EntityEditingController {
     public ResponseEntity<PagedResponse<ContrattoLocazioneEditDto>> listContrattiLocazione(
             @RequestParam(required = false, defaultValue = "0") int page,
             @RequestParam(required = false, defaultValue = "50") int size) {
+                System.out.println("Request listContrattiLocazione: page=" + page + ", size=" + size);
         return ResponseEntity.ok(new PagedResponse<>(
                 entityEditingService.listContrattiLocazione(PageRequest.of(page, size))));
     }

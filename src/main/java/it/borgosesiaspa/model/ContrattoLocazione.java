@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import it.borgosesiaspa.model.enums.ContrattoStato;
 import it.borgosesiaspa.model.enums.Periodicita;
+import it.borgosesiaspa.model.enums.TipologiaRinnovo;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -37,9 +38,39 @@ public class ContrattoLocazione extends BaseEntity {
     private Integer idConduttore;
 
     @Column
+    private LocalDate dataFine;
+    @Column
+    private LocalDate dataPrimaScadenza;
+    @Column
+    private Integer durataMesi;
+    @Column(precision = 10, scale = 2)
+    private BigDecimal canoneBase;
+    @Column
+    private Periodicita periodicita;
+    @Column
+    private Boolean rivalutazioneIstat;
+    @Column(precision = 5, scale = 2)
+    private BigDecimal percentualeIstat;
+    @Column(precision = 10, scale = 2)
+    private BigDecimal depositoCauzionale;
+    @Column
+    private ContrattoStato stato;
+    @Column
+    private String tipologia;
+    @Column
+    private TipologiaRinnovo tipologiaRinnovo;
+    @Column
+    private Integer mesiPreavviso;
+    @Column
+    private LocalDate dataCessazione;
+    @Column(columnDefinition = "TEXT")
+    private String note;
+
+    @Column
     private String codiceContratto;
     @Column
     private LocalDate dataInizio;
+
     public String getDescrizione() {
         return descrizione;
     }
@@ -215,29 +246,6 @@ public class ContrattoLocazione extends BaseEntity {
     public void setEventiContratto(List<EventoContratto> eventiContratto) {
         this.eventiContratto = eventiContratto;
     }
-
-    @Column
-    private LocalDate dataFine;
-    @Column
-    private LocalDate dataPrimaScadenza;
-    @Column
-    private Integer durataMesi;
-    @Column(precision = 10, scale = 2)
-    private BigDecimal canoneBase;
-    @Column
-    private Periodicita periodicita;
-    @Column
-    private Boolean rivalutazioneIstat;
-    @Column(precision = 5, scale = 2)
-    private BigDecimal percentualeIstat;
-    @Column(precision = 10, scale = 2)
-    private BigDecimal depositoCauzionale;
-    @Column
-    private ContrattoStato stato;
-    @Column
-    private LocalDate dataCessazione;
-    @Column(columnDefinition = "TEXT")
-    private String note;
 
     @OneToMany(mappedBy = "contrattoLocazione", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference

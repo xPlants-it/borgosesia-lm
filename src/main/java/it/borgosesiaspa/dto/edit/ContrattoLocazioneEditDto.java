@@ -5,6 +5,7 @@ import java.time.LocalDate;
 
 import it.borgosesiaspa.model.enums.ContrattoStato;
 import it.borgosesiaspa.model.enums.Periodicita;
+import it.borgosesiaspa.model.enums.TipologiaRinnovo;
 
 public class ContrattoLocazioneEditDto {
     private Long id;
@@ -25,6 +26,33 @@ public class ContrattoLocazioneEditDto {
     private ContrattoStato stato;
     private LocalDate dataCessazione;
     private String note;
+    private String tipologia;
+    private TipologiaRinnovo tipologiaRinnovo;
+    private Integer mesiPreavviso;
+
+    public String getTipologia() {
+        return tipologia;
+    }
+
+    public void setTipologia(String tipologia) {
+        this.tipologia = tipologia;
+    }
+
+    public TipologiaRinnovo getTipologiaRinnovo() {
+        return tipologiaRinnovo;
+    }
+
+    public void setTipologiaRinnovo(TipologiaRinnovo tipologiaRinnovo) {
+        this.tipologiaRinnovo = tipologiaRinnovo;
+    }
+
+    public Integer getMesiPreavviso() {
+        return mesiPreavviso;
+    }
+
+    public void setMesiPreavviso(Integer mesiPreavviso) {
+        this.mesiPreavviso = mesiPreavviso;
+    }
 
     public Long getId() {
         return id;
