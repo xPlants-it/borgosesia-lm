@@ -1,15 +1,18 @@
 package it.borgosesiaspa.dto.edit;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 import it.borgosesiaspa.model.enums.Periodicita;
+import it.borgosesiaspa.model.enums.StatoPianoCanone;
 import it.borgosesiaspa.model.enums.TipoCanone;
 
 public class PianoCanoneEditDto {
     private Long id;
     private Long contrattoLocazioneId;
-    private String dataInizioValidita;
-    private String dataFineValidita;
+    private LocalDate dataInizioValidita;
+    private LocalDate dataFineValidita;
+    private LocalDate dataAnnullamento;
     private BigDecimal importo;
     private Periodicita periodicita;
     private Integer giornoScadenza;
@@ -18,6 +21,27 @@ public class PianoCanoneEditDto {
 
     public Long getId() {
         return id;
+    }
+
+    public LocalDate getDataAnnullamento() {
+        return dataAnnullamento;
+    }
+
+    public void setDataAnnullamento(LocalDate dataAnnullamento) {
+        this.dataAnnullamento = dataAnnullamento;
+    }
+
+    public StatoPianoCanone getStato() {
+        var oggi = LocalDate.now();
+        var dataInizio = this.dataInizioValidita;
+        var dataFine = this.dataFineValidita;
+        if (dataAnnullamento != null)
+            return StatoPianoCanone.ANNULLATO;
+        if (oggi.isBefore(dataInizio))
+            return StatoPianoCanone.PROGRAMMATO;
+        if (dataFine != null && oggi.isAfter(dataFine))
+            return StatoPianoCanone.TERMINATO;
+        return StatoPianoCanone.ATTIVO;
     }
 
     public void setId(Long id) {
@@ -32,19 +56,19 @@ public class PianoCanoneEditDto {
         this.contrattoLocazioneId = contrattoLocazioneId;
     }
 
-    public String getDataInizioValidita() {
+    public LocalDate getDataInizioValidita() {
         return dataInizioValidita;
     }
 
-    public void setDataInizioValidita(String dataInizioValidita) {
+    public void setDataInizioValidita(LocalDate dataInizioValidita) {
         this.dataInizioValidita = dataInizioValidita;
     }
 
-    public String getDataFineValidita() {
+    public LocalDate getDataFineValidita() {
         return dataFineValidita;
     }
 
-    public void setDataFineValidita(String dataFineValidita) {
+    public void setDataFineValidita(LocalDate dataFineValidita) {
         this.dataFineValidita = dataFineValidita;
     }
 

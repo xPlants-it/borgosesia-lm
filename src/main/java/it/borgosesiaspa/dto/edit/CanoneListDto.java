@@ -6,17 +6,56 @@ import java.time.LocalDate;
 import it.borgosesiaspa.model.enums.StatoCanone;
 import it.borgosesiaspa.model.enums.TipoCanone;
 
-public class CanoneEditDto {
+public class CanoneListDto {
     private Long id;
+    private Integer idUnita;
+    private Integer idConduttore;
     private Long contrattoLocazioneId;
     private Long pianoCanoneId;
     private LocalDate periodoDa;
     private LocalDate periodoA;
     private LocalDate dataScadenza;
     private BigDecimal importo;
+
+    public void setIdUnita(Integer idUnita) {
+        this.idUnita = idUnita;
+    }
+
+    public void setIdConduttore(Integer idConduttore) {
+        this.idConduttore = idConduttore;
+    }
+
+    public void setCodiceContrattoLocazione(String codiceContrattoLocazione) {
+        this.codiceContrattoLocazione = codiceContrattoLocazione;
+    }
+
     private BigDecimal importoIncassato;
     private TipoCanone tipo;
     private StatoCanone stato;
+
+    private String descrizioneContrattoLocazione;
+
+    public Integer getIdUnita() {
+        return idUnita;
+    }
+
+    public Integer getIdConduttore() {
+        return idConduttore;
+    }
+
+    public String getCodiceContrattoLocazione() {
+        return codiceContrattoLocazione;
+    }
+
+    private String codiceContrattoLocazione;
+
+    public String getDescrizioneContrattoLocazione() {
+        return descrizioneContrattoLocazione;
+    }
+
+    public void setDescrizioneContrattoLocazione(String descrizioneContrattoLocazione) {
+        this.descrizioneContrattoLocazione = descrizioneContrattoLocazione;
+    }
 
     public Long getId() {
         return id;

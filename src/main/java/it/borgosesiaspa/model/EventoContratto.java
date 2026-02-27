@@ -14,7 +14,7 @@ import it.borgosesiaspa.shared.util.BaseEntity;
 
 @Entity
 @Table(indexes = {
-    @Index(name = "idx_idContratto", columnList = "idContratto"),
+    @Index(name = "idx_idContratto", columnList = "idContrattoLocazione"),
     @Index(name = "idx_tipoEvento", columnList = "tipoEvento"),
     @Index(name = "idx_riferimentoTipo", columnList = "riferimentoTipo")
 })

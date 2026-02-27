@@ -1,6 +1,7 @@
 package it.borgosesiaspa.model;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
@@ -15,7 +16,7 @@ import jakarta.persistence.Table;
 @Entity
 @Table(indexes = {
         @Index(name = "idx_idPianoCanone", columnList = "idPianoCanone"),
-        @Index(name = "idx_idContratto", columnList = "idContratto")
+        @Index(name = "idx_idContratto", columnList = "idContrattoLocazione")
 })
 public class Canone extends BaseEntity {
     /*- idContratto
@@ -45,22 +46,22 @@ public class Canone extends BaseEntity {
     public void setPianoCanone(PianoCanone pianoCanone) {
         this.pianoCanone = pianoCanone;
     }
-    public String getPeriodoDa() {
+    public LocalDate getPeriodoDa() {
         return periodoDa;
     }
-    public void setPeriodoDa(String periodoDa) {
+    public void setPeriodoDa(LocalDate periodoDa) {
         this.periodoDa = periodoDa;
     }
-    public String getPeriodoA() {
+    public LocalDate getPeriodoA() {
         return periodoA;
     }
-    public void setPeriodoA(String periodoA) {
+    public void setPeriodoA(LocalDate periodoA) {
         this.periodoA = periodoA;
     }
-    public String getDataScadenza() {
+    public LocalDate getDataScadenza() {
         return dataScadenza;
     }
-    public void setDataScadenza(String dataScadenza) {
+    public void setDataScadenza(LocalDate dataScadenza) {
         this.dataScadenza = dataScadenza;
     }
     public BigDecimal getImporto() {
@@ -81,10 +82,10 @@ public class Canone extends BaseEntity {
     public void setTipo(it.borgosesiaspa.model.enums.TipoCanone tipo) {
         this.tipo = tipo;
     }
-    public it.borgosesiaspa.model.enums.CanoneStato getStato() {
+    public it.borgosesiaspa.model.enums.StatoCanone getStato() {
         return stato;
     }
-    public void setStato(it.borgosesiaspa.model.enums.CanoneStato stato) {
+    public void setStato(it.borgosesiaspa.model.enums.StatoCanone stato) {
         this.stato = stato;
     }
     @ManyToOne
@@ -92,11 +93,11 @@ public class Canone extends BaseEntity {
     @JoinColumn(name = "id_piano_canone", nullable = true)
     private PianoCanone pianoCanone;
     @Column
-    private String periodoDa;
+    private LocalDate periodoDa;
     @Column
-    private String periodoA;
+    private LocalDate periodoA;
     @Column
-    private String dataScadenza;
+    private LocalDate dataScadenza;
     @Column(precision = 10, scale = 2)
     private BigDecimal importo;
     @Column(precision = 10, scale = 2)
@@ -104,5 +105,5 @@ public class Canone extends BaseEntity {
     @Column
     private it.borgosesiaspa.model.enums.TipoCanone tipo;
     @Column
-    private it.borgosesiaspa.model.enums.CanoneStato stato;
+    private it.borgosesiaspa.model.enums.StatoCanone stato;
 }

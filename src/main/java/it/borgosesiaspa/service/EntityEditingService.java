@@ -1,5 +1,9 @@
 package it.borgosesiaspa.service;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -8,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import it.borgosesiaspa.dto.edit.CanoneEditDto;
+import it.borgosesiaspa.dto.edit.CanoneListDto;
 import it.borgosesiaspa.dto.edit.ContrattoLocazioneEditDto;
 import it.borgosesiaspa.dto.edit.EventoContrattoEditDto;
 import it.borgosesiaspa.dto.edit.IncassoEditDto;
@@ -19,9 +24,10 @@ import it.borgosesiaspa.model.EventoContratto;
 import it.borgosesiaspa.model.Incasso;
 import it.borgosesiaspa.model.Morosita;
 import it.borgosesiaspa.model.PianoCanone;
+import it.borgosesiaspa.model.enums.StatoCanone;
+import it.borgosesiaspa.model.enums.StatoPianoCanone;
 import it.borgosesiaspa.repository.CanoneRepository;
 import it.borgosesiaspa.repository.ContrattoLocazioneRepository;
-import it.borgosesiaspa.repository.EventoContrattoRepository;
 import it.borgosesiaspa.repository.IncassoRepository;
 import it.borgosesiaspa.repository.MorositaRepository;
 import it.borgosesiaspa.repository.PianoCanoneRepository;
@@ -35,7 +41,8 @@ public class EntityEditingService {
     private final IncassoRepository incassoRepository;
     private final MorositaRepository morositaRepository;
     private final PianoCanoneRepository pianoCanoneRepository;
-    private final EventoContrattoRepository eventoContrattoRepository;
+    // private final EventoContrattoRepository eventoContrattoRepository;
+    private final EventoContrattoService eventoContrattoService;
 
     public EntityEditingService(
             ContrattoLocazioneRepository contrattoLocazioneRepository,
@@ -43,13 +50,13 @@ public class EntityEditingService {
             IncassoRepository incassoRepository,
             MorositaRepository morositaRepository,
             PianoCanoneRepository pianoCanoneRepository,
-            EventoContrattoRepository eventoContrattoRepository) {
+            EventoContrattoService eventoContrattoService) {
         this.contrattoLocazioneRepository = contrattoLocazioneRepository;
         this.canoneRepository = canoneRepository;
         this.incassoRepository = incassoRepository;
         this.morositaRepository = morositaRepository;
         this.pianoCanoneRepository = pianoCanoneRepository;
-        this.eventoContrattoRepository = eventoContrattoRepository;
+        this.eventoContrattoService = eventoContrattoService;
     }
 
     @Transactional(readOnly = true)
@@ -70,8 +77,17 @@ public class EntityEditingService {
 
     @Transactional(readOnly = true)
     public ContrattoLocazioneEditDto getContrattoLocazione(Long id) {
-        ContrattoLocazione entity = findContrattoLocazione(id);
-        return toDto(entity);
+        return toDto(findContrattoLocazione(id));
+    }
+
+    @Transactional(readOnly = true)
+    public List<PianoCanoneEditDto> getContrattoLocazionePianiCanone(Long idContrattoLocazione) {
+        try {
+            List<PianoCanone> entities = findContrattoLocazionePianiCanone(idContrattoLocazione);
+            return entities != null ? entities.stream().map(this::toDto).toList() : List.of();
+        } catch (ResponseStatusException e) {
+        }
+        return List.of();
     }
 
     public ContrattoLocazioneEditDto updateContrattoLocazione(Long id, ContrattoLocazioneEditDto dto) {
@@ -83,6 +99,16 @@ public class EntityEditingService {
     @Transactional(readOnly = true)
     public Page<CanoneEditDto> listCanoni(Pageable pageable) {
         return canoneRepository.findAll(pageable).map(this::toDto);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<CanoneListDto> searchCanoni(Pageable pageable, Long contrattoLocazioneId,
+            Long pianoCanoneId,
+            LocalDate scadenzaDa,
+            LocalDate scadenzaA,
+            List<StatoCanone> statiCanone) {
+        Page<Canone> entities = canoneRepository.searchCanoni(pageable, contrattoLocazioneId, pianoCanoneId, scadenzaDa, scadenzaA, statiCanone);
+        return entities.map(this::toListDto);
     }
 
     public CanoneEditDto createCanone(CanoneEditDto dto) {
@@ -110,6 +136,50 @@ public class EntityEditingService {
     @Transactional(readOnly = true)
     public Page<IncassoEditDto> listIncassi(Pageable pageable) {
         return incassoRepository.findAll(pageable).map(this::toDto);
+    }
+
+    public IncassoEditDto registraIncassoCanone(Long canoneId, IncassoEditDto dto, String username) {
+        if (dto.getCanoneId() != null && !dto.getCanoneId().equals(canoneId)) {
+            throw badRequest("Il canoneId nel path e nel body devono essere uguali");
+        }
+        Canone canone = findCanone(canoneId);
+        if (canone != null) {
+            CanoneEditDto canoneDto = toDto(canone);
+            BigDecimal incassatoFinoAdOra = canoneDto.getImportoIncassato() != null ? canoneDto.getImportoIncassato() : BigDecimal.ZERO;
+            BigDecimal incassoAttuale = dto.getImporto() != null ? dto.getImporto() : BigDecimal.ZERO;
+            canoneDto.setImportoIncassato(incassatoFinoAdOra.add(incassoAttuale));
+            boolean incassoCompleto = canoneDto.getImportoIncassato().compareTo(canoneDto.getImporto()) >= 0;
+            canoneDto.setStato(incassoCompleto ? StatoCanone.INCASSATO : StatoCanone.PARZIALMENTE_INCASSATO);
+            applyCanone(canone, canoneDto);
+            canoneRepository.save(canone);
+            Incasso entity = new Incasso();
+            applyIncasso(entity, dto);
+            entity = incassoRepository.save(entity);
+            eventoContrattoService.registraIncassoCanone(canone, entity, username);
+            return toDto(entity);
+        }
+        throw notFound("Canone", canoneId);
+    }
+
+    public MorositaEditDto apriMorositaCanone(Long canoneId, MorositaEditDto dto, String username) {
+        if (dto.getCanoneId() != null && !dto.getCanoneId().equals(canoneId)) {
+            throw badRequest("Il canoneId nel path e nel body devono essere uguali");
+        }
+        Canone canone = findCanone(canoneId);
+        if (canone != null) {
+            CanoneEditDto canoneDto = toDto(canone);
+            boolean incassoNullo = canoneDto.getImportoIncassato().compareTo(BigDecimal.ZERO) == 0;
+            canoneDto.setStato(incassoNullo ? StatoCanone.INSOLUTO : StatoCanone.PARZIALMENTE_INCASSATO);
+            applyCanone(canone, canoneDto);
+            canoneRepository.save(canone);
+            Morosita entity = new Morosita();
+            dto.setImportoResiduo(canoneDto.getImporto().subtract(canoneDto.getImportoIncassato()));
+            applyMorosita(entity, dto);
+            entity = morositaRepository.save(entity);
+            eventoContrattoService.apriMorositaCanone(canone, entity, username);
+            return toDto(entity);
+        }
+        throw notFound("Canone", canoneId);
     }
 
     public IncassoEditDto createIncasso(IncassoEditDto dto) {
@@ -166,10 +236,66 @@ public class EntityEditingService {
         return pianoCanoneRepository.findAll(pageable).map(this::toDto);
     }
 
+    @Transactional(readOnly = true)
+    public Page<CanoneEditDto> listCanoniPianoCanone(Pageable pageable, Long pianoCanoneId) {
+        return canoneRepository.findByPianoCanoneId(pianoCanoneId, pageable).map(this::toDto);
+    }
+
+    private final static org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(EntityEditingService.class);
+
     public PianoCanoneEditDto createPianoCanone(PianoCanoneEditDto dto) {
         PianoCanone entity = new PianoCanone();
         applyPianoCanone(entity, dto);
-        return toDto(pianoCanoneRepository.save(entity));
+        // Dobbiamo creare i canoni dalla data inizio validità del piano canone fino
+        // alla data fine validità, considerando la periodicità e la data di scadenza
+        // indicati nel piano canone
+        int monthShift = switch (entity.getPeriodicita()) {
+            case MENSILE -> 1;
+            case BIMESTRALE -> 2;
+            case TRIMESTRALE -> 3;
+            case QUADRIMESTRALE -> 4;
+            case SEMESTRALE -> 6;
+            case ANNUALE -> 12;
+            default -> throw badRequest("Periodicità non supportata: " + entity.getPeriodicita());
+        };
+        LocalDate dataInizio = entity.getDataInizioValidita();
+        ContrattoLocazione contratto = entity.getContrattoLocazione();
+        if (contratto == null) {
+            throw badRequest("contrattoLocazioneId e' obbligatorio");
+        }
+        if (dataInizio == null) {
+            dataInizio = contratto.getDataInizio();
+        }
+        LocalDate dataFine = entity.getDataFineValidita(); // se non è indicata una data fine validità, consideriamo un periodo molto lungo
+        PianoCanone savedPianoCanone = pianoCanoneRepository.save(entity);
+        while (dataInizio.isBefore(dataFine)) {
+            CanoneEditDto canoneDto = new CanoneEditDto();
+            canoneDto.setPeriodoDa(dataInizio.withDayOfMonth(1));
+            // verifica che il massimo del mese sia maggiore del giorno di scadenza,
+            // altrimenti la data di scadenza sarà l'ultimo giorno del mese
+            int giornoScadenza = entity.getGiornoScadenza() != null ? entity.getGiornoScadenza() : dataInizio.getDayOfMonth();
+            int ultimoGiornoMese = dataInizio.lengthOfMonth();
+            if (giornoScadenza > ultimoGiornoMese) {
+                giornoScadenza = ultimoGiornoMese;
+            }
+            canoneDto.setDataScadenza(dataInizio.withDayOfMonth(giornoScadenza));
+            LocalDate periodoA = canoneDto.getPeriodoDa().plusMonths(monthShift).minusDays(1);
+            dataInizio = dataInizio.plusMonths(monthShift);
+            canoneDto.setPeriodoA(periodoA);
+
+            canoneDto.setImporto(entity.getImporto());
+            canoneDto.setImportoIncassato(BigDecimal.ZERO);
+            canoneDto.setTipo(entity.getTipo());
+            canoneDto.setStato(StatoCanone.EMESSO);
+            canoneDto.setContrattoLocazioneId(contratto.getId());
+            canoneDto.setPianoCanoneId(savedPianoCanone.getId());
+
+            Canone canone = new Canone();
+            applyCanone(canone, canoneDto);
+            canoneRepository.save(canone);
+        }
+
+        return toDto(savedPianoCanone);
     }
 
     public void deletePianoCanone(Long id) {
@@ -188,31 +314,10 @@ public class EntityEditingService {
         return toDto(pianoCanoneRepository.save(entity));
     }
 
-    @Transactional(readOnly = true)
-    public Page<EventoContrattoEditDto> listEventiContratto(Pageable pageable) {
-        return eventoContrattoRepository.findAll(pageable).map(this::toDto);
-    }
-
-    public EventoContrattoEditDto createEventoContratto(EventoContrattoEditDto dto) {
-        EventoContratto entity = new EventoContratto();
-        applyEventoContratto(entity, dto);
-        return toDto(eventoContrattoRepository.save(entity));
-    }
-
-    public void deleteEventoContratto(Long id) {
-        EventoContratto entity = findEventoContratto(id);
-        eventoContrattoRepository.delete(entity);
-    }
-
-    @Transactional(readOnly = true)
-    public EventoContrattoEditDto getEventoContratto(Long id) {
-        return toDto(findEventoContratto(id));
-    }
-
-    public EventoContrattoEditDto updateEventoContratto(Long id, EventoContrattoEditDto dto) {
-        EventoContratto entity = findEventoContratto(id);
-        applyEventoContratto(entity, dto);
-        return toDto(eventoContrattoRepository.save(entity));
+    public PianoCanoneEditDto cancelPianoCanone(Long id, String username) {
+        PianoCanone entity = findPianoCanone(id);
+        cancelPianoCanone(entity, username);
+        return toDto(pianoCanoneRepository.save(entity));
     }
 
     private void applyContrattoLocazione(ContrattoLocazione entity, ContrattoLocazioneEditDto dto) {
@@ -228,11 +333,16 @@ public class EntityEditingService {
         entity.setCanoneBase(dto.getCanoneBase());
         entity.setPeriodicita(dto.getPeriodicita());
         entity.setRivalutazioneIstat(dto.getRivalutazioneIstat());
+        entity.setDecorrenzaIstat(dto.getDecorrenzaIstat());
         entity.setPercentualeIstat(dto.getPercentualeIstat());
         entity.setDepositoCauzionale(dto.getDepositoCauzionale());
         entity.setStato(dto.getStato());
         entity.setDataCessazione(dto.getDataCessazione());
         entity.setNote(dto.getNote());
+        entity.setTipologia(dto.getTipologia());
+        entity.setTipologiaRinnovo(dto.getTipologiaRinnovo());
+        entity.setMesiPreavviso(dto.getMesiPreavviso());
+        entity.setSpeseAccessorieRiaddebitabili(dto.getSpeseAccessorieRiaddebitabili());
     }
 
     private void applyCanone(Canone entity, CanoneEditDto dto) {
@@ -282,29 +392,44 @@ public class EntityEditingService {
         entity.setContrattoLocazione(findContrattoLocazione(dto.getContrattoLocazioneId()));
         entity.setDataInizioValidita(dto.getDataInizioValidita());
         entity.setDataFineValidita(dto.getDataFineValidita());
+        entity.setDataAnnullamento(dto.getDataAnnullamento());
         entity.setImporto(dto.getImporto());
         entity.setPeriodicita(dto.getPeriodicita());
         entity.setGiornoScadenza(dto.getGiornoScadenza());
         entity.setTipo(dto.getTipo());
         entity.setNote(dto.getNote());
+
     }
 
-    private void applyEventoContratto(EventoContratto entity, EventoContrattoEditDto dto) {
-        entity.setContrattoLocazione(dto.getContrattoLocazioneId() != null
-                ? findContrattoLocazione(dto.getContrattoLocazioneId())
-                : null);
-        entity.setTipoEvento(dto.getTipoEvento());
-        entity.setDataEvento(dto.getDataEvento());
-        entity.setRiferimentoTipo(dto.getRiferimentoTipo());
-        entity.setRiferimentoId(dto.getRiferimentoId());
-        entity.setPayloadJson(dto.getPayloadJson());
-        entity.setNote(dto.getNote());
-        entity.setCreatedBy(dto.getCreatedBy());
+    private void cancelPianoCanone(PianoCanone entity, String username) {
+        if (entity.getContrattoLocazione() == null) {
+            throw badRequest("contrattoLocazioneId e' obbligatorio");
+        }
+        entity.setDataAnnullamento(LocalDate.now());
+        List<Canone> canoni = canoneRepository.findByPianoCanoneIdAndStato(entity.getId(), StatoCanone.EMESSO);
+        for (Canone canone : canoni) {
+            canone.setStato(StatoCanone.ANNULLATO);
+            log.warn("Annullo canone {} con contratto {}", canone, canone.getContrattoLocazione());
+            canoneRepository.save(canone);
+        }
+        eventoContrattoService.cancelPianoCanone(entity, username);
+
     }
 
     private ContrattoLocazione findContrattoLocazione(Long id) {
+        if (id == null) {
+            throw badRequest("L'id del ContrattoLocazione non può essere null");
+        }
         return contrattoLocazioneRepository.findById(id)
                 .orElseThrow(() -> notFound("ContrattoLocazione", id));
+    }
+
+    private List<PianoCanone> findContrattoLocazionePianiCanone(Long id) {
+        List<PianoCanone> pianiCanone = pianoCanoneRepository.findByContrattoLocazioneId(id);
+        if (pianiCanone.isEmpty()) {
+            throw notFound("ContrattoLocazione", id);
+        }
+        return pianiCanone;
     }
 
     private Canone findCanone(Long id) {
@@ -325,11 +450,6 @@ public class EntityEditingService {
     private PianoCanone findPianoCanone(Long id) {
         return pianoCanoneRepository.findById(id)
                 .orElseThrow(() -> notFound("PianoCanone", id));
-    }
-
-    private EventoContratto findEventoContratto(Long id) {
-        return eventoContrattoRepository.findById(id)
-                .orElseThrow(() -> notFound("EventoContratto", id));
     }
 
     private ResponseStatusException notFound(String entityName, Long id) {
@@ -356,10 +476,15 @@ public class EntityEditingService {
         dto.setPeriodicita(entity.getPeriodicita());
         dto.setRivalutazioneIstat(entity.getRivalutazioneIstat());
         dto.setPercentualeIstat(entity.getPercentualeIstat());
+        dto.setDecorrenzaIstat(entity.getDecorrenzaIstat());
         dto.setDepositoCauzionale(entity.getDepositoCauzionale());
         dto.setStato(entity.getStato());
         dto.setDataCessazione(entity.getDataCessazione());
         dto.setNote(entity.getNote());
+        dto.setTipologia(entity.getTipologia());
+        dto.setTipologiaRinnovo(entity.getTipologiaRinnovo());
+        dto.setMesiPreavviso(entity.getMesiPreavviso());
+        dto.setSpeseAccessorieRiaddebitabili(entity.getSpeseAccessorieRiaddebitabili());
         return dto;
     }
 
@@ -368,6 +493,26 @@ public class EntityEditingService {
         dto.setId(entity.getId());
         dto.setContrattoLocazioneId(entity.getContrattoLocazione() != null ? entity.getContrattoLocazione().getId() : null);
         dto.setPianoCanoneId(entity.getPianoCanone() != null ? entity.getPianoCanone().getId() : null);
+        dto.setPeriodoDa(entity.getPeriodoDa());
+        dto.setPeriodoA(entity.getPeriodoA());
+        dto.setDataScadenza(entity.getDataScadenza());
+        dto.setImporto(entity.getImporto());
+        dto.setImportoIncassato(entity.getImportoIncassato());
+        dto.setTipo(entity.getTipo());
+        dto.setStato(entity.getStato());
+        return dto;
+    }
+
+    private CanoneListDto toListDto(Canone entity) {
+        ContrattoLocazione contratto = entity.getContrattoLocazione();
+        CanoneListDto dto = new CanoneListDto();
+        dto.setId(entity.getId());
+        dto.setContrattoLocazioneId(contratto != null ? contratto.getId() : null);
+        dto.setIdUnita(contratto != null ? contratto.getIdUnita() : null);
+        dto.setIdConduttore(contratto != null ? contratto.getIdConduttore() : null);
+        dto.setCodiceContrattoLocazione(contratto != null ? contratto.getCodiceContratto() : null);
+        dto.setDescrizioneContrattoLocazione(contratto != null ? contratto.getDescrizione() : null);
+        dto.setCodiceContrattoLocazione(contratto != null ? contratto.getCodiceContratto() : null);
         dto.setPeriodoDa(entity.getPeriodoDa());
         dto.setPeriodoA(entity.getPeriodoA());
         dto.setDataScadenza(entity.getDataScadenza());
@@ -412,6 +557,7 @@ public class EntityEditingService {
         dto.setContrattoLocazioneId(entity.getContrattoLocazione() != null ? entity.getContrattoLocazione().getId() : null);
         dto.setDataInizioValidita(entity.getDataInizioValidita());
         dto.setDataFineValidita(entity.getDataFineValidita());
+        dto.setDataAnnullamento(entity.getDataAnnullamento());
         dto.setImporto(entity.getImporto());
         dto.setPeriodicita(entity.getPeriodicita());
         dto.setGiornoScadenza(entity.getGiornoScadenza());

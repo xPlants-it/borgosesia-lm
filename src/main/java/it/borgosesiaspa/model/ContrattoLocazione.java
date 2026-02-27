@@ -7,6 +7,7 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import it.borgosesiaspa.model.enums.ContrattoStato;
+import it.borgosesiaspa.model.enums.DecorrenzaISTAT;
 import it.borgosesiaspa.model.enums.Periodicita;
 import it.borgosesiaspa.model.enums.TipologiaRinnovo;
 import jakarta.persistence.CascadeType;
@@ -45,10 +46,32 @@ public class ContrattoLocazione extends BaseEntity {
     private Integer durataMesi;
     @Column(precision = 10, scale = 2)
     private BigDecimal canoneBase;
+    @Column(precision = 10, scale = 2)
+    private BigDecimal speseAccessorieRiaddebitabili;
+
+    public BigDecimal getSpeseAccessorieRiaddebitabili() {
+        return speseAccessorieRiaddebitabili;
+    }
+
+    public void setSpeseAccessorieRiaddebitabili(BigDecimal speseAccessorieRiaddebitabili) {
+        this.speseAccessorieRiaddebitabili = speseAccessorieRiaddebitabili;
+    }
+
     @Column
     private Periodicita periodicita;
     @Column
     private Boolean rivalutazioneIstat;
+    @Column
+    private DecorrenzaISTAT decorrenzaIstat;
+
+    public DecorrenzaISTAT getDecorrenzaIstat() {
+        return decorrenzaIstat;
+    }
+
+    public void setDecorrenzaIstat(DecorrenzaISTAT decorrenzaISTAT) {
+        this.decorrenzaIstat = decorrenzaISTAT;
+    }
+
     @Column(precision = 5, scale = 2)
     private BigDecimal percentualeIstat;
     @Column(precision = 10, scale = 2)
@@ -65,6 +88,30 @@ public class ContrattoLocazione extends BaseEntity {
     private LocalDate dataCessazione;
     @Column(columnDefinition = "TEXT")
     private String note;
+
+    public String getTipologia() {
+        return tipologia;
+    }
+
+    public void setTipologia(String tipologia) {
+        this.tipologia = tipologia;
+    }
+
+    public TipologiaRinnovo getTipologiaRinnovo() {
+        return tipologiaRinnovo;
+    }
+
+    public void setTipologiaRinnovo(TipologiaRinnovo tipologiaRinnovo) {
+        this.tipologiaRinnovo = tipologiaRinnovo;
+    }
+
+    public Integer getMesiPreavviso() {
+        return mesiPreavviso;
+    }
+
+    public void setMesiPreavviso(Integer mesiPreavviso) {
+        this.mesiPreavviso = mesiPreavviso;
+    }
 
     @Column
     private String codiceContratto;

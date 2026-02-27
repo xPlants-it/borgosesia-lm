@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import it.borgosesiaspa.model.enums.ContrattoStato;
+import it.borgosesiaspa.model.enums.DecorrenzaISTAT;
 import it.borgosesiaspa.model.enums.Periodicita;
 import it.borgosesiaspa.model.enums.TipologiaRinnovo;
 
@@ -18,17 +19,36 @@ public class ContrattoLocazioneEditDto {
     private LocalDate dataFine;
     private LocalDate dataPrimaScadenza;
     private Integer durataMesi;
-    private BigDecimal canoneBase;
     private Periodicita periodicita;
     private Boolean rivalutazioneIstat;
     private BigDecimal percentualeIstat;
     private BigDecimal depositoCauzionale;
+    private BigDecimal canoneBase;
+    private BigDecimal speseAccessorieRiaddebitabili;
+
+    public BigDecimal getSpeseAccessorieRiaddebitabili() {
+        return speseAccessorieRiaddebitabili;
+    }
+
+    public void setSpeseAccessorieRiaddebitabili(BigDecimal speseAccessorieRiaddebitabili) {
+        this.speseAccessorieRiaddebitabili = speseAccessorieRiaddebitabili;
+    }
+
     private ContrattoStato stato;
     private LocalDate dataCessazione;
     private String note;
     private String tipologia;
     private TipologiaRinnovo tipologiaRinnovo;
     private Integer mesiPreavviso;
+    private DecorrenzaISTAT decorrenzaIstat;
+
+    public DecorrenzaISTAT getDecorrenzaIstat() {
+        return decorrenzaIstat;
+    }
+
+    public void setDecorrenzaIstat(DecorrenzaISTAT d) {
+        this.decorrenzaIstat = d;
+    }
 
     public String getTipologia() {
         return tipologia;
